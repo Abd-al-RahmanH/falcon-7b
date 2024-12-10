@@ -1,32 +1,19 @@
-import streamlit as st
 import requests
+import streamlit as st
 
-# Streamlit App Title and Layout
-st.set_page_config(page_title="Falcon 7B Chat App", layout="centered")
+# Falcon 7B model endpoint
+FALCON_URL = "https://api-inference.huggingface.co/models/falcon-7b"
+
+# Streamlit app setup
+st.set_page_config(page_title="Falcon 7B Chat App", page_icon="🤖", layout="centered")
 st.title("Falcon 7B Chat App")
+st.markdown("### Chat History")
 
-# IBM Cloud Credentials
-API_KEY = "r6zSAPJm7t8GbkqJENPzmXPpOKokltDGcMREKRr5fWdh"  # Replace with your actual API key
-FALCON_URL = "https://us-south.ml.cloud.ibm.com/ml/v1/deployments/ff2ad53a-6aa0-440b-8311-447844c24376/text/generation?version=2023-05-29"
+# Chat history initialization
+if "chat_history" not in st.session_state:
+    st.session_state["chat_history"] = []
 
-# Fetch Access Token
-def get_access_token(api_key):
-    """Retrieve access token from IBM Cloud."""
-    url = "https://iam.cloud.ibm.com/identity/token"
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    data = {
-        "grant_type": "urn:ibm:params:oauth:grant-type:apikey",
-        "apikey": api_key,
-    }
-    try:
-        response = requests.post(url, headers=headers, data=data)
-        response.raise_for_status()
-        return response.json().get("access_token")
-    except Exception as e:
-        st.error(f"Failed to fetch access token: {e}")
-        return None
-
-# Make a request to Falcon Model
+# Function to fetch Falcon response
 def fetch_falcon_response(access_token, user_input):
     """Send a user query to the Falcon 7B model and retrieve a response."""
     headers = {
@@ -37,45 +24,44 @@ def fetch_falcon_response(access_token, user_input):
     body = {
         "input": user_input,
         "parameters": {
-            "decoding_method": "greedy",
-            "max_new_tokens": 150,
-            "repetition_penalty": 1.1,
-            "stop_sequences": [],
-        },
+            "decoding_method": "top_k_sampling",
+            "top_k": 50,
+            "top_p": 0.9,
+            "temperature": 0.7,
+            "max_new_tokens": 50,
+            "repetition_penalty": 1.2,
+            "stop_sequences": ["\n"]
+        }
     }
     try:
-        st.write("Request Body:", body)  # Debugging log
         response = requests.post(FALCON_URL, headers=headers, json=body)
-        st.write("Response Status Code:", response.status_code)  # Debugging log
-        st.write("Response Body:", response.text)  # Debugging log
-
         if response.status_code == 200:
-            return response.json().get("results", [{}])[0].get("generated_text", "No response from the model.")
+            result = response.json().get("results", [{}])[0].get("generated_text", "")
+            clean_response = result.split('.')[0] + '.'
+            return clean_response
         else:
             return f"Error: {response.status_code} - {response.text}"
     except Exception as e:
         st.error(f"Failed to fetch response from Falcon model: {e}")
         return None
 
-# Streamlit App Logic
-st.subheader("Chat History")
-if "chat_history" not in st.session_state:
-    st.session_state["chat_history"] = []
+# Input access token
+access_token = st.text_input("Enter your API Access Token", type="password")
+user_input = st.text_input("Your Question", key="user_input")
 
-user_input = st.text_input("Your Question", placeholder="Type your question here...")
-if user_input:
-    access_token = get_access_token(API_KEY)
-    if access_token:
-        model_response = fetch_falcon_response(access_token, user_input)
-        if model_response:
-            st.session_state["chat_history"].append(f"User: {user_input}")
-            st.session_state["chat_history"].append(f"Assistant: {model_response}")
-    else:
-        st.error("Could not generate access token. Please check your API key.")
-
-# Display Chat History
+# Display chat history
 for message in st.session_state["chat_history"]:
-    if "User:" in message:
-        st.markdown(f"**{message}**")
+    st.markdown(message)
+
+# Fetch and display response on button click
+if st.button("Send"):
+    if access_token and user_input:
+        st.session_state["chat_history"].append(f"User: {user_input}")
+        response = fetch_falcon_response(access_token, user_input)
+        if response:
+            st.session_state["chat_history"].append(f"Assistant: {response}")
+        else:
+            st.session_state["chat_history"].append("Assistant: No response from the model.")
+        st.experimental_rerun()
     else:
-        st.markdown(f"{message}")
+        st.warning("Please enter both an access token and your question.")
