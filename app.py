@@ -1,67 +1,64 @@
 import requests
 import streamlit as st
 
-# Falcon 7B model endpoint
-FALCON_URL = "https://api-inference.huggingface.co/models/falcon-7b"
+# IBM Cloud API Key
+api_key = "r6zSAPJm7t8GbkqJENPzmXPpOKokltDGcMREKRr5fWdh"
 
-# Streamlit app setup
-st.set_page_config(page_title="Falcon 7B Chat App", page_icon="🤖", layout="centered")
-st.title("Falcon 7B Chat App")
-st.markdown("### Chat History")
+# Function to fetch a new access token
+def get_access_token(api_key):
+    token_url = "https://iam.cloud.ibm.com/identity/token"
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    data = {
+        "grant_type": "urn:ibm:params:oauth:grant-type:apikey",
+        "apikey": api_key,
+    }
+    response = requests.post(token_url, headers=headers, data=data)
+    if response.status_code != 200:
+        st.error(f"Failed to get access token: {response.text}")
+        return None
+    return response.json()["access_token"]
 
-# Chat history initialization
-if "chat_history" not in st.session_state:
-    st.session_state["chat_history"] = []
+# Streamlit App
+st.title("Falcon 7B Model Text Generation")
 
-# Function to fetch Falcon response
-def fetch_falcon_response(access_token, user_input):
-    """Send a user query to the Falcon 7B model and retrieve a response."""
+# User input
+prompt = st.text_input("Enter your prompt:", "Explain about transformers in ML")
+max_new_tokens = st.slider("Max New Tokens:", min_value=50, max_value=300, value=150)
+decoding_method = st.selectbox("Decoding Method:", ["greedy", "beam", "sampling"])
+repetition_penalty = st.slider("Repetition Penalty:", min_value=1.0, max_value=2.0, value=1.1)
+
+if st.button("Generate Text"):
+    # Fetch access token
+    access_token = get_access_token(api_key)
+    if access_token is None:
+        st.stop()
+
+    # API URL
+    url = "https://us-south.ml.cloud.ibm.com/ml/v1/deployments/ff2ad53a-6aa0-440b-8311-447844c24376/text/generation?version=2023-05-29"
+
+    # Request body
+    body = {
+        "input": prompt,
+        "parameters": {
+            "decoding_method": decoding_method,
+            "max_new_tokens": max_new_tokens,
+            "stop_sequences": [],  # You can add stop sequences here if needed
+            "repetition_penalty": repetition_penalty,
+        },
+    }
+
+    # Headers
     headers = {
         "Accept": "application/json",
         "Content-Type": "application/json",
         "Authorization": f"Bearer {access_token}",
     }
-    body = {
-        "input": user_input,
-        "parameters": {
-            "decoding_method": "top_k_sampling",
-            "top_k": 50,
-            "top_p": 0.9,
-            "temperature": 0.7,
-            "max_new_tokens": 50,
-            "repetition_penalty": 1.2,
-            "stop_sequences": ["\n"]
-        }
-    }
-    try:
-        response = requests.post(FALCON_URL, headers=headers, json=body)
-        if response.status_code == 200:
-            result = response.json().get("results", [{}])[0].get("generated_text", "")
-            clean_response = result.split('.')[0] + '.'
-            return clean_response
-        else:
-            return f"Error: {response.status_code} - {response.text}"
-    except Exception as e:
-        st.error(f"Failed to fetch response from Falcon model: {e}")
-        return None
 
-# Input access token
-access_token = st.text_input("Enter your API Access Token", type="password")
-user_input = st.text_input("Your Question", key="user_input")
-
-# Display chat history
-for message in st.session_state["chat_history"]:
-    st.markdown(message)
-
-# Fetch and display response on button click
-if st.button("Send"):
-    if access_token and user_input:
-        st.session_state["chat_history"].append(f"User: {user_input}")
-        response = fetch_falcon_response(access_token, user_input)
-        if response:
-            st.session_state["chat_history"].append(f"Assistant: {response}")
-        else:
-            st.session_state["chat_history"].append("Assistant: No response from the model.")
-        st.experimental_rerun()
+    # Make request
+    response = requests.post(url, headers=headers, json=body)
+    if response.status_code != 200:
+        st.error(f"Request failed: {response.text}")
     else:
-        st.warning("Please enter both an access token and your question.")
+        data = response.json()
+        generated_text = data.get("results", [{}])[0].get("generated_text", "No output.")
+        st.text_area("Generated Text:", generated_text, height=200)
