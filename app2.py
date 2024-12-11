@@ -65,7 +65,7 @@ st.title("Chat with Falcon Family Models hosted on watson.ai")
 
 # User Inputs
 prompt = st.text_input("Enter your prompt:", "Explain about transformers in ML")
-max_new_tokens = st.slider("Max New Tokens:", min_value=50, max_value=2000, value=150)
+max_new_tokens = st.slider("Max New Tokens:", min_value=50, max_value=900, value=150)
 decoding_method = st.selectbox("Decoding Method:", ["greedy"])
 repetition_penalty = st.slider("Repetition Penalty:", min_value=1.0, max_value=2.0, value=1.1)
 temperature = st.slider("Temperature:", min_value=0.1, max_value=1.0, value=0.7)
