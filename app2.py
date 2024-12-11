@@ -54,7 +54,7 @@ if st.button("Generate Text"):
     if access_token is None:
         st.stop()
 
-    # Request body
+    # Request body with conditional parameters based on decoding method
     body = {
         "input": prompt,
         "parameters": {
@@ -62,11 +62,16 @@ if st.button("Generate Text"):
             "max_new_tokens": max_new_tokens,
             "stop_sequences": [],
             "repetition_penalty": repetition_penalty,
+        },
+    }
+
+    # Add optional parameters for non-greedy methods
+    if decoding_method != "greedy":
+        body["parameters"].update({
             "temperature": temperature,
             "top_k": top_k,
             "top_p": top_p,
-        },
-    }
+        })
 
     # Headers
     headers = {
