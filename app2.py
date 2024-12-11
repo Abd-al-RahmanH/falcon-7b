@@ -27,6 +27,26 @@ def get_access_token(api_key):
         return None
     return response.json()["access_token"]
 
+# Function to generate text using Falcon 7B
+def generate_falcon_7b(api_key, url, prompt, parameters):
+    access_token = get_access_token(api_key)
+    if access_token is None:
+        st.stop()
+
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {access_token}",
+    }
+
+    response = requests.post(url, headers=headers, json={"input": prompt, "parameters": parameters})
+    if response.status_code != 200:
+        st.error(f"Request failed: {response.text}")
+        return ""
+
+    data = response.json()
+    return data.get("results", [{}])[0].get("generated_text", "No output.")
+
 # Streamlit Sidebar for Model Selection
 st.sidebar.title("Falcon Model Selector")
 model_choice = st.sidebar.radio("Choose a model:", list(models.keys()))
@@ -48,43 +68,26 @@ temperature = st.slider("Temperature:", min_value=0.1, max_value=1.0, value=0.7)
 top_k = st.slider("Top-k:", min_value=0, max_value=50, value=10)
 top_p = st.slider("Top-p:", min_value=0.0, max_value=1.0, value=0.9)
 
+# Generate Text Button
 if st.button("Generate Text"):
-    # Fetch access token
-    access_token = get_access_token(api_key)
-    if access_token is None:
-        st.stop()
-
-    # Request body with conditional parameters based on decoding method
-    body = {
-        "input": prompt,
-        "parameters": {
-            "decoding_method": decoding_method,
-            "max_new_tokens": max_new_tokens,
-            "stop_sequences": [],
-            "repetition_penalty": repetition_penalty,
-        },
+    # Prepare parameters for the request
+    parameters = {
+        "decoding_method": decoding_method,
+        "max_new_tokens": max_new_tokens,
+        "stop_sequences": [],
+        "repetition_penalty": repetition_penalty,
     }
 
     # Add optional parameters for non-greedy methods
     if decoding_method != "greedy":
-        body["parameters"].update({
+        parameters.update({
             "temperature": temperature,
             "top_k": top_k,
             "top_p": top_p,
         })
 
-    # Headers
-    headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {access_token}",
-    }
+    # Generate text using the selected model
+    generated_text = generate_falcon_7b(api_key, url, prompt, parameters)
 
-    # Make request
-    response = requests.post(url, headers=headers, json=body)
-    if response.status_code != 200:
-        st.error(f"Request failed: {response.text}")
-    else:
-        data = response.json()
-        generated_text = data.get("results", [{}])[0].get("generated_text", "No output.")
-        st.text_area("Generated Text:", generated_text, height=200)
+    # Display the generated text
+    st.text_area("Generated Text:", generated_text, height=200)
