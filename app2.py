@@ -54,6 +54,7 @@ def generate_falcon_7b(api_key, url, prompt, parameters):
 # Streamlit Sidebar for Model Selection
 st.sidebar.title("Falcon Model Selector")
 model_choice = st.sidebar.radio("Choose a model:", list(models.keys()))
+top_k = st.slider("Top-k:", min_value=0, max_value=50, value=10)
 
 # Fetch selected model details
 selected_model = models[model_choice]
