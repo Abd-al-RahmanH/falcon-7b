@@ -61,7 +61,7 @@ api_key = selected_model["api_key"]
 url = selected_model["url"]
 
 # Streamlit App Title
-st.title("Chat with Falcon Family Models hosted on watson.ai")
+st.title("Chat with Falcon Family Models hosted on watsonx.ai")
 
 # User Inputs
 prompt = st.text_input("Enter your prompt:", "Explain about transformers in ML")
