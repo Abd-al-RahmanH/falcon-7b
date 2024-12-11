@@ -7,11 +7,11 @@ load_dotenv()
 
 # API Keys and Deployment URLs (hardcoded for development use)
 models = {
-    "Falcon 7B": {
+    "Falcon-7B": {
         "api_key": os.getenv("FALCON_7B_API_KEY"),
         "url": "https://us-south.ml.cloud.ibm.com/ml/v1/deployments/ff2ad53a-6aa0-440b-8311-447844c24376/text/generation?version=2023-05-29",
     },
-    "Falcon 7B Instruct": {
+    "Falcon-7B-Instruct": {
         "api_key":  os.getenv("FALCON_7B_INSTRUCT_API_KEY"),
         "url": "https://us-south.ml.cloud.ibm.com/ml/v1/deployments/02ba55f0-6620-412f-8eac-0f4ce2face3b/text/generation?version=2023-05-29",
     },
@@ -52,7 +52,7 @@ def generate_falcon_7b(api_key, url, prompt, parameters):
     return data.get("results", [{}])[0].get("generated_text", "No output.")
 
 # Streamlit Sidebar for Model Selection
-st.sidebar.title("Falcon Model Selector")
+st.sidebar.title("Falcon Model From HF")
 model_choice = st.sidebar.radio("Choose a model:", list(models.keys()))
  
 
