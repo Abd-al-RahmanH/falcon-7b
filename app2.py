@@ -61,12 +61,12 @@ api_key = selected_model["api_key"]
 url = selected_model["url"]
 
 # Streamlit App Title
-st.title("Chat with Falcon Models")
+st.title("Chat with Falcon Family Models hosted on watson.ai")
 
 # User Inputs
 prompt = st.text_input("Enter your prompt:", "Explain about transformers in ML")
-max_new_tokens = st.slider("Max New Tokens:", min_value=50, max_value=300, value=150)
-decoding_method = st.selectbox("Decoding Method:", ["greedy", "beam", "sampling"])
+max_new_tokens = st.slider("Max New Tokens:", min_value=50, max_value=2000, value=150)
+decoding_method = st.selectbox("Decoding Method:", ["greedy"])
 repetition_penalty = st.slider("Repetition Penalty:", min_value=1.0, max_value=2.0, value=1.1)
 temperature = st.slider("Temperature:", min_value=0.1, max_value=1.0, value=0.7)
 top_k = st.slider("Top-k:", min_value=0, max_value=50, value=10)
