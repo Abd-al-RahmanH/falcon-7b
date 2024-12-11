@@ -2,7 +2,7 @@ import requests
 import streamlit as st
 
 # Hardcoded API Key and Deployment Details
-API_KEY = "r6zSAPJm7t8GbkqJENPzmXPpOKokltDGcMREKRr5fWdh"
+API_KEY = "lxSvrj38wGGmzduRfNhTS1jMH2yHCA835Hilf64P_9go"
 DEPLOYMENT_URL = "https://us-south.ml.cloud.ibm.com/ml/v1/deployments/02ba55f0-6620-412f-8eac-0f4ce2face3b/text/generation?version=2023-05-29"
 
 # Streamlit App
