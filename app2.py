@@ -53,7 +53,6 @@ def generate_falcon_7b(api_key, url, prompt, parameters):
 
 # Streamlit Sidebar for Model Selection
 st.sidebar.title("Falcon Model Selector")
-top_k = st.slider("Top-k:", min_value=0, max_value=50, value=10)
 model_choice = st.sidebar.radio("Choose a model:", list(models.keys()))
  
 
@@ -71,8 +70,8 @@ max_new_tokens = st.slider("Max New Tokens:", min_value=50, max_value=900, value
 decoding_method = st.selectbox("Decoding Method:", ["greedy"])
 repetition_penalty = st.slider("Repetition Penalty:", min_value=1.0, max_value=2.0, value=1.1)
 temperature = st.slider("Temperature:", min_value=0.1, max_value=1.0, value=0.7)
-top_k = st.slider("Top-k:", min_value=0, max_value=50, value=10)
-top_p = st.slider("Top-p:", min_value=0.0, max_value=1.0, value=0.9)
+#top_k = st.slider("Top-k:", min_value=0, max_value=50, value=10)
+#top_p = st.slider("Top-p:", min_value=0.0, max_value=1.0, value=0.9)
 
 # Generate Text Button
 if st.button("Generate Text"):
